@@ -203,8 +203,8 @@ process_twin_data <- function(file_path) {
 # Main script execution
 
 # Set the directory path - adjust as needed
-dir_path <- getwd()
-dir_path <- "/Users/morgenbauer/Desktop/AllTwinData"
+dir_path_pwd <- getwd()
+dir_path <- paste0(dir_path_pwd,"/","01-input/", "AllTwinData/")
 
 cat("Working directory:", dir_path, "\n")
 
@@ -277,4 +277,4 @@ cat("\nSummary:\n")
 cat("Total files processed:", length(csv_files), "\n")
 cat("Successful analyses:", length(all_results), "\n")
 cat("Failed analyses:", length(csv_files) - length(all_results), "\n")
-
+#Confirming I made a change to this line to test Git
