@@ -202,19 +202,23 @@ process_twin_data <- function(file_path) {
 
 # Main script execution
 
-# Set the directory path - adjust as needed
-dir_path_pwd <- getwd()
-dir_path <- paste0(dir_path_pwd,"/","01-input/", "AllTwinData/")
+# Set the directory path where this script is running
+dir_to_RStudio_script <- getwd()
+# The RStudio folder is at same level as "01-input".  Hence the following ".."
+input_path <- file.path(dir_to_RStudio_script, "..", "01-input", "AllTwinData")
+# This is where output files will go
+output_path <- file.path(dir_to_RStudio_script, "..", "02-output")
 
-cat("Working directory:", dir_path, "\n")
+cat("Input Path:", input_path, "\n")
+cat("Output Path:", output_Path, "\n")
 
 # First, convert all Excel files to CSV
 cat("\nStep 1: Converting Excel files to CSV\n")
-convert_excel_to_csv(dir_path)
+convert_excel_to_csv(input_path)
 
 # Now list all CSV files in the directory (including newly converted ones)
 cat("\nStep 2: Processing CSV files\n")
-csv_files <- list.files(dir_path, pattern = "\\.csv$", full.names = TRUE)
+csv_files <- list.files(input_path, pattern = "\\.csv$", full.names = TRUE)
 cat("Found", length(csv_files), "CSV files to process\n")
 
 # Check if any CSV files were found
@@ -258,7 +262,7 @@ if(length(all_results) > 0) {
                                "Acrophase_degrees", "Pvalue", "F_statistic")]
   
   # Write results to CSV
-  output_file <- file.path(dir_path, "twin_hr_cosinor_results.csv")
+  output_file <- file.path(output_path, "twin_hr_cosinor_results.csv")
   write.csv(results_df, output_file, row.names = FALSE)
   
   # Print success message
