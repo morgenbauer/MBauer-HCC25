@@ -210,7 +210,7 @@ input_path <- file.path(dir_to_RStudio_script, "..", "01-input", "AllTwinData")
 output_path <- file.path(dir_to_RStudio_script, "..", "02-output")
 
 cat("Input Path:", input_path, "\n")
-cat("Output Path:", output_Path, "\n")
+cat("Output Path:", output_path, "\n")
 
 # First, convert all Excel files to CSV
 cat("\nStep 1: Converting Excel files to CSV\n")
