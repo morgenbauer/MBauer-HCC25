@@ -44,22 +44,20 @@ compute_two_component_cosinor <- function(local_data) {
     # 24-hour component parameters
     coef_cos <- coefs[2]
     coef_sin <- coefs[3]
-    #beta_cos_24 <- coefs[2], changed due to incorrect naming 
-    #beta_sin_24 <- coefs[3], changed due to incorrect naming
-    A1 <- sqrt(beta_cos_24^2 + beta_sin_24^2)  # Amplitude for 24h component
+    A1 <- sqrt(coef_cos^2 + coef_sin^2)  # Amplitude for 24h component
     
     # Calculate acrophase for 24-hour component (in hours)
-    acrophase_24_rad <- atan2(beta_sin_24, beta_cos_24)
+    acrophase_24_rad <- atan2(coef_sin, coef_cos)
     acrophase_24_hours <- -acrophase_24_rad * 24 / (2 * pi)
     if(acrophase_24_hours < 0) acrophase_24_hours <- acrophase_24_hours + 24
     
     # 12-hour component parameters
-    beta_cos_12 <- coefs[4]
-    beta_sin_12 <- coefs[5]
-    A2 <- sqrt(beta_cos_12^2 + beta_sin_12^2)  # Amplitude for 12h component
+    coef_cos_12 <- coefs[4]
+    coef_sin_12 <- coefs[5]
+    A2 <- sqrt(coef_cos_12^2 + coef_sin_12^2)  # Amplitude for 12h component
     
     # Calculate acrophase for 12-hour component (in hours)
-    acrophase_12_rad <- atan2(beta_sin_12, beta_cos_12)
+    acrophase_12_rad <- atan2(coef_sin_12, coef_cos_12)
     acrophase_12_hours <- -acrophase_12_rad * 12 / (2 * pi)
     if(acrophase_12_hours < 0) acrophase_12_hours <- acrophase_12_hours + 12
     
