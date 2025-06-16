@@ -42,8 +42,10 @@ compute_two_component_cosinor <- function(local_data) {
     M <- coefs[1]  # MESOR (mean level)
     
     # 24-hour component parameters
-    beta_cos_24 <- coefs[2]
-    beta_sin_24 <- coefs[3]
+    coef_cos <- coefs[2]
+    coef_sin <- coefs[3]
+    #beta_cos_24 <- coefs[2], changed due to incorrect naming 
+    #beta_sin_24 <- coefs[3], changed due to incorrect naming
     A1 <- sqrt(beta_cos_24^2 + beta_sin_24^2)  # Amplitude for 24h component
     
     # Calculate acrophase for 24-hour component (in hours)
@@ -153,42 +155,12 @@ process_sheet_data <- function(file_path, sheet_name) {
   return(cosinor_results)
 }
 
-# Main script execution
-
 # Set the directory path where this script is running
 dir_to_RStudio_script <- getwd()
 
-# Find the project root by looking for the directory containing "GC" folder
-# Start from current directory and go up the tree until we find "GC"
-find_project_root <- function(start_dir) {
-  current_dir <- start_dir
-  max_levels <- 10  # Prevent infinite loop
-  
-  for(i in 1:max_levels) {
-    gc_path <- file.path(current_dir, "GC")
-    if(dir.exists(gc_path)) {
-      return(current_dir)
-    }
-    parent_dir <- dirname(current_dir)
-    if(parent_dir == current_dir) {
-      # Reached root directory
-      break
-    }
-    current_dir <- parent_dir
-  }
-  return(NULL)
-}
-
-# Find the project root
-project_root <- find_project_root(dir_to_RStudio_script)
-
-if(is.null(project_root)) {
-  stop("Could not find project root containing 'GC' folder. Please check directory structure.")
-}
-
 # Set paths relative to project root
-input_path <- file.path(project_root, "GC")
-output_path <- file.path(project_root, "02-output")
+input_path <- file.path(dir_to_RStudio_script, "..", "GC")
+output_path <- file.path(dir_to_RStudio_script, "..", "02-output")
 
 # Create output directory if it doesn't exist
 if(!dir.exists(output_path)) {
@@ -196,7 +168,7 @@ if(!dir.exists(output_path)) {
   cat("Created output directory:", output_path, "\n")
 }
 
-cat("Project Root:", project_root, "\n")
+cat("RStudio Script:", dir_to_RStudio_script, "\n")
 cat("Input Path:", input_path, "\n")
 cat("Output Path:", output_path, "\n")
 
@@ -207,6 +179,9 @@ if(!dir.exists(input_path)) {
 
 # Look for Excel files in the input directory
 excel_files <- list.files(input_path, pattern = "\\.xlsx$", full.names = TRUE)
+#Now we filter out temporary excel files
+excel_files <- excel_files[!grepl("^~", basename(excel_files))]
+
 cat("Found", length(excel_files), "Excel files to process\n")
 
 # Print the Excel files found for debugging
