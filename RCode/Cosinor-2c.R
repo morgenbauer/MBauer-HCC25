@@ -12,6 +12,12 @@ library(dplyr)
 library(ggplot2)
 library(readxl)
 
+#ConvertToHccDegrees ensures results are consistent with HCC philosophy that
+#the zero degree is at the 12 o'clock positon.
+ConvertToHccDegrees <- function(acrophase){
+  if(acrophase >0) {acrophase - 360} else{acrophase}
+}
+
 # Function to perform cosinor analysis (full + individual components)
 compute_two_component_cosinor <- function(local_data) {
   if (nrow(local_data) < 10) {
@@ -53,9 +59,9 @@ compute_two_component_cosinor <- function(local_data) {
       Pvalue = pval,
       F_statistic = fstat[1],
       Amplitude_24h_full = A1,
-      Acrophase_24h_full = acro24,
+      Acrophase_24h_full = ConvertToHccDegrees(acro24),
       Amplitude_12h_full = A2,
-      Acrophase_12h_full = acro12
+      Acrophase_12h_full = ConvertToHccDegrees(acro12)
     )
     
     # 24h only
@@ -75,7 +81,7 @@ compute_two_component_cosinor <- function(local_data) {
       PercentRhythm = PR24,
       MESOR = coefs24[1],
       Amplitude = A24,
-      Acrophase_deg = acro24_indiv,
+      Acrophase_deg = ConvertToHccDegrees(acro24_indiv),
       Pvalue = p24,
       F_statistic = f24[1],
       Amplitude_24h_full = NA,
@@ -101,7 +107,7 @@ compute_two_component_cosinor <- function(local_data) {
       PercentRhythm = PR12,
       MESOR = coefs12[1],
       Amplitude = A12,
-      Acrophase_deg = acro12_indiv,
+      Acrophase_deg = ConvertToHccDegrees(acro12_indiv),
       Pvalue = p12,
       F_statistic = f12[1],
       Amplitude_24h_full = NA,
