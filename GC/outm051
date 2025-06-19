@@ -1,0 +1,24 @@
+
+
+Twins: 051 - HR                                                                 
+-----Rhythmometric Summary-----
+
+                                                                                     Acrophase                  P-values(*)
+    Variable      Period   Mesor   s.e.   PR    P   Amplitude s.e.  (   95.0 %CI   )  phi  se (95.0 %CI) gofit normal var hom
+-------------------------------------------------------------------------------------------------------------------------------
+  1 Tw051a                136.158  0.891
+                   24.00                   3  0.076    2.964  1.296 (   0.42,   5.50) -138  24 ( -91,-186)
+                   12.00                   0  0.886    0.717  1.467 (  -2.16,   3.59) -134  92 (-313,-315)
+                 overall                   3  0.259    3.131                          -110 (-328)           0.001  0.337  0.811
+-------------------------------------------------------------------------------------------------------------------------------
+  2 Tw051b                142.473  0.818
+                   24.00                   1  0.668    1.096  1.218 (  -1.29,   3.48) -121  58 (  -6,-236)
+                   12.00                   0  0.732    0.901  1.183 (  -1.42,   3.22) -160  79 (  -5,-316)
+                 overall                   1  0.866    1.742                           -89 (-339)           0.235  0.521  0.695
+-------------------------------------------------------------------------------------------------------------------------------
+(*)P-values from test of assumptions underlying the multiple component model; P>0.05 validate the fitted model, whereas P<0.05 
+provide information concerning data departure from underlying assumptions; a negative value (-1.000) indicates that the test   
+could not be performed (too few data or replicates for <3 timepoints); "gofit" tests the goodness of fit of the model; (data   
+collected at times epsilon*tau apart are considered as replicates); "normal" checks the normality of residuals (Shapiro-Wilk   
+test for N<51 or chi-square for N>50); "var hom" tests the homogeneity of variance; when one or more of these 3 tests yield(s) 
+P-values <0.05, transformations or alternate models are to be considered.
