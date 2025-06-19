@@ -106,10 +106,12 @@ compute_two_component_cosinor <- function(local_data) {
     summary_model <- summary(model)
     A1 <- sqrt(coefs[2]^2 + coefs[3]^2)
     A2 <- sqrt(coefs[4]^2 + coefs[5]^2)
-    acro24 <- -atan2(coefs[3], coefs[2]) * 180 / pi
-    acro12 <- -atan2(coefs[5], coefs[4]) * 180 / pi
+    acro24AsRadians <- -atan2(coefs[3], coefs[2])
+    acro24 <- acro24AsRadians * 180 / pi
     if (acro24 < 0) acro24 <- acro24 + 360
-    if (acro12 < 0) acro12 <- acro12 + 360
+    acro12AsRadians <- -atan2(coefs[5], coefs[4])
+    acro12 <- acro12AsRadians * 180 / pi
+     if (acro12 < 0) acro12 <- acro12 + 360
     percent_rhythm <- summary_model$r.squared * 100
     fstat <- summary_model$fstatistic
     pval <- pf(fstat[1], fstat[2], fstat[3], lower.tail = FALSE)
@@ -120,8 +122,8 @@ compute_two_component_cosinor <- function(local_data) {
     # NOTE: t must be expressed in hours
     cosinor2C <- function(t) {
       MESOR +
-        A1 * cos((2 * pi / 24) * t * acro24) +
-        A2 * cos((2 * pi / 12) * t * acro12)
+        A1 * cos((2 * pi / 24) * t  + acro12AsRadians ) +
+        A2 * cos((2 * pi / 12) * t  + acro12AsRadians )
     }
     # specify the time range to use
     minT <- min(local_data$time_hours, na.rm=TRUE)
@@ -136,9 +138,9 @@ compute_two_component_cosinor <- function(local_data) {
     # Compute the MAGNITUDE by subtracting Amplitude of Orthophase and Bathyphase
     Ortho_y  <- max(extremaOf$y, na.rm=TRUE)
     Bathy_y  <- min(extremaOf$y, na.rm=TRUE)
-    Magnitude <- Ortho_y - Bathy_y
+    Magnitude <- (Ortho_y - Bathy_y)/2
     
-    # Determine what times are associated with thos maximums
+    # Determine what times are associated with those maximums
     imax  <- which.max(extremaOf$y)
     Ortho_t <- (extremaOf[imax, ]$t / 24) * 180 / pi
     if (Ortho_t < 0) Ortho_t <- Ortho_t + 360
