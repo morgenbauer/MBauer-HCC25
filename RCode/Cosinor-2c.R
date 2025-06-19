@@ -83,6 +83,22 @@ ExtremaOf <- function(f,
   data.frame(t = roots, y = vals)
 }
 
+# Kitt's Acrophase Correction
+# Inputs are in radians; output is in radians
+kittAcrophaseQuadrantCorrection <- function (cosCoeff, sinCoeff) {
+  acrophase <- 0
+  acrophase <- atan(abs(sinCoeff/cosCoeff))
+  g <- 1
+  if(cosCoeff * sinCoeff > 0) {
+   g <- -1
+  }
+  dphi <- 0
+  if(cosCoeff < 0) {
+   dphi <- -pi
+  }
+  acrophase <- dphi + g*acrophase
+}
+
 
 # Function to perform cosinor analysis (full + individual components)
 compute_two_component_cosinor <- function(local_data) {
@@ -106,12 +122,16 @@ compute_two_component_cosinor <- function(local_data) {
     summary_model <- summary(model)
     A1 <- sqrt(coefs[2]^2 + coefs[3]^2)
     A2 <- sqrt(coefs[4]^2 + coefs[5]^2)
-    acro24AsRadians <- -atan2(coefs[3], coefs[2])
+    # acro24AsRadians <- -atan2(coefs[3], coefs[2])
+    acro24AsRadians <- kittAcrophaseQuadrantCorrection(coefs[2], coefs[3])
+    if (acro24AsRadians < 0 )  acro24AsRadians <- acro24AsRadians + 2*pi
     acro24 <- acro24AsRadians * 180 / pi
     if (acro24 < 0) acro24 <- acro24 + 360
-    acro12AsRadians <- -atan2(coefs[5], coefs[4])
+    # acro12AsRadians <- -atan2(coefs[5], coefs[4])
+    acro12AsRadians <- kittAcrophaseQuadrantCorrection(coefs[4], coefs[5])
+    if(acro12AsRadians < 0)  acro12AsRadians <- acro12AsRadians + 2*pi
     acro12 <- acro12AsRadians * 180 / pi
-     if (acro12 < 0) acro12 <- acro12 + 360
+    if (acro12 < 0) acro12 <- acro12 + 360
     percent_rhythm <- summary_model$r.squared * 100
     fstat <- summary_model$fstatistic
     pval <- pf(fstat[1], fstat[2], fstat[3], lower.tail = FALSE)
