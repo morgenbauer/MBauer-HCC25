@@ -18,6 +18,65 @@ ConvertToHccDegrees <- function(acrophase){
   if(acrophase >0) {acrophase - 360} else{acrophase}
 }
 
+# ExtremaOf returns the list of x,y pairs where the 
+ExtremaOf <- function(f,
+                      lowerT, upperT,
+                      method = c("symbolic", "numeric"),
+                      tol    = .Machine$double.eps^0.5,
+                      ...) 
+{
+  method <- match.arg(method)
+  
+  if (method == "symbolic") {
+    # --- Symbolic: f must be given as an *expression* in `t`, e.g. quote(sin(t)+t^2)
+    if (!requireNamespace("Deriv", quietly = TRUE) ||
+        !requireNamespace("Ryacas", quietly = TRUE)) {
+      stop("For symbolic method, install Deriv and Ryacas")
+    }
+    f_expr  <- substitute(f)
+    df_expr <- Deriv::Deriv(f_expr, "t")
+    
+    # Build a Yacas solve call
+    sol_txt <- Ryacas::y_fn("Solve",
+                            Ryacas::ysym(df_expr) == 0,
+                            "t")
+    # parse the returned list of rules
+    raw    <- Ryacas::yac_str(sol_txt)
+    # e.g. raw == "{ {t -> 1/2}, {t -> 3/2} }"
+    # strip braces & split
+    nums   <- gsub("^\\{+|\\}+","", raw)
+    parts  <- unlist(strsplit(nums, "\\},\\{", perl=TRUE))
+    roots  <- vapply(parts, function(p) {
+      # each p like "t -> 1/2"
+      as.numeric(eval(parse(text=sub(".*->","", p))))
+    }, numeric(1))
+    
+  } else {
+    # --- Numeric: f is a numeric function f(t)
+    if (!requireNamespace("numDeriv", quietly = TRUE) ||
+        !requireNamespace("rootSolve", quietly = TRUE)) {
+      stop("For numeric method, install numDeriv and rootSolve")
+    }
+    # numeric derivative
+    df_fun <- function(x) numDeriv::grad(func = f, x = x)
+    # find *all* zeros of df_fun in [lowerT,upperT]
+    roots <- rootSolve::uniroot.all(f = df_fun,
+                                    lower = lowerT,
+                                    upper = upperT,
+                                    tol   = tol,
+                                    ...)
+  }
+  
+  # Filter and evaluate f at each root
+  roots <- sort(unique(roots))
+  roots <- roots[roots >= lowerT & roots <= upperT]
+  
+  # Return a two‐column data.frame: t and f(t)
+  vals <- vapply(roots, f, numeric(1))
+  data.frame(t = roots, y = vals)
+}
+
+
 # Function to perform cosinor analysis (full + individual components)
 compute_two_component_cosinor <- function(local_data) {
   if (nrow(local_data) < 10) {
@@ -61,7 +120,9 @@ compute_two_component_cosinor <- function(local_data) {
       Amplitude_24h_full = A1,
       Acrophase_24h_full = ConvertToHccDegrees(acro24),
       Amplitude_12h_full = A2,
-      Acrophase_12h_full = ConvertToHccDegrees(acro12)
+      Acrophase_12h_full = ConvertToHccDegrees(acro12),
+      Orthophase = "Orthophase",
+      Bathyphase = "Bathyphase"
     )
     
     # 24h only
@@ -87,7 +148,9 @@ compute_two_component_cosinor <- function(local_data) {
       Amplitude_24h_full = NA,
       Acrophase_24h_full = NA,
       Amplitude_12h_full = NA,
-      Acrophase_12h_full = NA
+      Acrophase_12h_full = NA,     
+      Orthophase = NA,
+      Bathyphase = NA
     )
     
     # 12h only
@@ -113,7 +176,9 @@ compute_two_component_cosinor <- function(local_data) {
       Amplitude_24h_full = NA,
       Acrophase_24h_full = NA,
       Amplitude_12h_full = NA,
-      Acrophase_12h_full = NA
+      Acrophase_12h_full = NA,     
+      Orthophase = NA,
+      Bathyphase = NA
     )
     
     # Add sheet ID to all rows
@@ -196,7 +261,7 @@ if (length(all_results) > 0) {
     "Amplitude", "Acrophase_deg",
     "Amplitude_24h_full", "Acrophase_24h_full",
     "Amplitude_12h_full", "Acrophase_12h_full",
-    "Pvalue", "F_statistic"
+    "Pvalue", "F_statistic", "Orthophase", "Bathyphase"
   )]
   
   output_file <- file.path(output_path, "2c_cosionor_results.csv")
