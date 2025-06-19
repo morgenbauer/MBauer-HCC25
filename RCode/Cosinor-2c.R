@@ -11,6 +11,11 @@
 library(dplyr)
 library(ggplot2)
 library(readxl)
+# libs for ExtremaOf
+library(Deriv)
+library(Ryacas)
+library(numDeriv)
+library(rootSolve)
 
 #ConvertToHccDegrees ensures results are consistent with HCC philosophy that
 #the zero degree is at the 12 o'clock positon.
@@ -18,7 +23,9 @@ ConvertToHccDegrees <- function(acrophase){
   if(acrophase >0) {acrophase - 360} else{acrophase}
 }
 
-# ExtremaOf returns the list of x,y pairs where the 
+# ExtremaOf returns the list of x,y pairs where the slope is zero.
+# From this list, select the MinMax to return the Orthophase and Bathyphase
+# ExtremaOf(f, lowerT, upperT, "numeric")
 ExtremaOf <- function(f,
                       lowerT, upperT,
                       method = c("symbolic", "numeric"),
@@ -108,6 +115,42 @@ compute_two_component_cosinor <- function(local_data) {
     pval <- pf(fstat[1], fstat[2], fstat[3], lower.tail = FALSE)
     MESOR <- coefs[1]
     
+    # BEGIN COMPUTE Orthophase and Bathyphase
+    # Create 2-component cosinor function
+    # NOTE: t must be expressed in hours
+    cosinor2C <- function(t) {
+      MESOR +
+        A1 * cos((2 * pi / 24) * t * acro24) +
+        A2 * cos((2 * pi / 12) * t * acro12)
+    }
+    # specify the time range to use
+    minT <- min(local_data$time_hours, na.rm=TRUE)
+    maxT <- max(local_data$time_hours, na.rm=TRUE)
+    # Ensure one complete cycle using the largest period of the harmonic
+    range <- minT + 24
+    # TODO : If tau components are not harmonic, return NA
+
+    # Compute where zero slope occurs
+    extremaOf <- ExtremaOf(cosinor2C, minT, range, "numeric")
+ 
+    # Compute the MAGNITUDE by subtracting Amplitude of Orthophase and Bathyphase
+    Ortho_y  <- max(extremaOf$y, na.rm=TRUE)
+    Bathy_y  <- min(extremaOf$y, na.rm=TRUE)
+    Magnitude <- Ortho_y - Bathy_y
+    
+    # Determine what times are associated with thos maximums
+    imax  <- which.max(extremaOf$y)
+    Ortho_t <- (extremaOf[imax, ]$t / 24) * 180 / pi
+    if (Ortho_t < 0) Ortho_t <- Ortho_t + 360
+    
+    # Which row has the smallest y?
+    imin  <- which.min(extremaOf$y)
+    Bathy_t <- ( extremaOf[imin, ]$t / 24) * 180 / pi
+    if (Bathy_t < 0) Bathy_t <- Bathy_t + 360
+    
+    
+    # END COMPUTE Orthophase and Bathyphase
+    
     rows[["Full"]] <- data.frame(
       Model_Type = "Full",
       N_observations = nrow(local_data),
@@ -121,8 +164,9 @@ compute_two_component_cosinor <- function(local_data) {
       Acrophase_24h_full = ConvertToHccDegrees(acro24),
       Amplitude_12h_full = A2,
       Acrophase_12h_full = ConvertToHccDegrees(acro12),
-      Orthophase = "Orthophase",
-      Bathyphase = "Bathyphase"
+      MAGNITUDE = Magnitude,
+      Orthophase = ConvertToHccDegrees(Ortho_t),
+      Bathyphase = ConvertToHccDegrees(Bathy_t)
     )
     
     # 24h only
@@ -148,7 +192,8 @@ compute_two_component_cosinor <- function(local_data) {
       Amplitude_24h_full = NA,
       Acrophase_24h_full = NA,
       Amplitude_12h_full = NA,
-      Acrophase_12h_full = NA,     
+      Acrophase_12h_full = NA,
+      MAGNITUDE = NA,
       Orthophase = NA,
       Bathyphase = NA
     )
@@ -176,7 +221,8 @@ compute_two_component_cosinor <- function(local_data) {
       Amplitude_24h_full = NA,
       Acrophase_24h_full = NA,
       Amplitude_12h_full = NA,
-      Acrophase_12h_full = NA,     
+      Acrophase_12h_full = NA,
+      MAGNITUDE = NA,
       Orthophase = NA,
       Bathyphase = NA
     )
@@ -261,7 +307,7 @@ if (length(all_results) > 0) {
     "Amplitude", "Acrophase_deg",
     "Amplitude_24h_full", "Acrophase_24h_full",
     "Amplitude_12h_full", "Acrophase_12h_full",
-    "Pvalue", "F_statistic", "Orthophase", "Bathyphase"
+    "Pvalue", "F_statistic", "MAGNITUDE", "Orthophase", "Bathyphase"
   )]
   
   output_file <- file.path(output_path, "2c_cosionor_results.csv")
