@@ -17,6 +17,8 @@ library(Ryacas)
 library(numDeriv)
 library(rootSolve)
 
+#Add a function to hard code a specific source for AllTwin2Day? In order to toggle between both
+
 #ConvertToHccDegrees ensures results are consistent with HCC philosophy that
 #the zero degree is at the 12 o'clock positon.
 ConvertToHccDegrees <- function(acrophase){
@@ -107,6 +109,8 @@ compute_two_component_cosinor <- function(local_data) {
     return(NULL)
   }
   
+  #TODO; if time, make code more general to fit any number of components
+  # at line 22, must add (local_data, periods), etc. 
   tryCatch({
     local_data$time_hours <- local_data$time * 24
     local_data$cos_24 <- cos(2 * pi * local_data$time_hours / 24)
@@ -122,11 +126,13 @@ compute_two_component_cosinor <- function(local_data) {
     summary_model <- summary(model)
     A1 <- sqrt(coefs[2]^2 + coefs[3]^2)
     A2 <- sqrt(coefs[4]^2 + coefs[5]^2)
+   
     # acro24AsRadians <- -atan2(coefs[3], coefs[2])
     acro24AsRadians <- kittAcrophaseQuadrantCorrection(coefs[2], coefs[3])
     if (acro24AsRadians < 0 )  acro24AsRadians <- acro24AsRadians + 2*pi
     acro24 <- acro24AsRadians * 180 / pi
     if (acro24 < 0) acro24 <- acro24 + 360
+    
     # acro12AsRadians <- -atan2(coefs[5], coefs[4])
     acro12AsRadians <- kittAcrophaseQuadrantCorrection(coefs[4], coefs[5])
     if(acro12AsRadians < 0)  acro12AsRadians <- acro12AsRadians + 2*pi
@@ -142,7 +148,7 @@ compute_two_component_cosinor <- function(local_data) {
     # NOTE: t must be expressed in hours
     cosinor2C <- function(t) {
       MESOR +
-        A1 * cos((2 * pi / 24) * t  + acro12AsRadians ) +
+        A1 * cos((2 * pi / 24) * t  + acro24AsRadians ) +
         A2 * cos((2 * pi / 12) * t  + acro12AsRadians )
     }
     # specify the time range to use
@@ -154,7 +160,7 @@ compute_two_component_cosinor <- function(local_data) {
 
     # Compute where zero slope occurs
     extremaOf <- ExtremaOf(cosinor2C, minT, range, "numeric")
- 
+
     # Compute the MAGNITUDE by subtracting Amplitude of Orthophase and Bathyphase
     Ortho_y  <- max(extremaOf$y, na.rm=TRUE)
     Bathy_y  <- min(extremaOf$y, na.rm=TRUE)
@@ -162,15 +168,14 @@ compute_two_component_cosinor <- function(local_data) {
     
     # Determine what times are associated with those maximums
     imax  <- which.max(extremaOf$y)
-    Ortho_t <- (extremaOf[imax, ]$t / 24) * 180 / pi
-    if (Ortho_t < 0) Ortho_t <- Ortho_t + 360
+    Ortho_t_hour <- ((extremaOf[imax, ]$t))%%24
+    Ortho_t <- Ortho_t_hour * -360/24
     
     # Which row has the smallest y?
     imin  <- which.min(extremaOf$y)
-    Bathy_t <- ( extremaOf[imin, ]$t / 24) * 180 / pi
-    if (Bathy_t < 0) Bathy_t <- Bathy_t + 360
-    
-    
+    Bathy_t_hour <- ((extremaOf[imin, ]$t))%%24
+    Bathy_t <- Bathy_t_hour * -360/24
+     
     # END COMPUTE Orthophase and Bathyphase
     
     rows[["Full"]] <- data.frame(
