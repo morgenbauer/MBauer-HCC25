@@ -300,7 +300,7 @@ process_sheet_data <- function(file_path, sheet_name) {
 # Directory Setup
 dir_to_script <- getwd()
 # TODO : why is getwd() NOT returning the following path
-dir_to_script <- file.path("C:", "Users", "chase", "Documents", "HCC", "_git", "MBauer-HCC25", "RCode" )
+# dir_to_script <- file.path("C:", "Users", "chase", "Documents", "HCC", "_git", "MBauer-HCC25", "RCode" )
 if (!dir.exists(dir_to_script)) stop("Directory not found: ", dir_to_script)
 
 input_path <- file.path(dir_to_script, "..", "01-input", "AllTwin2Day")
@@ -350,6 +350,6 @@ if (length(all_results) > 0) {
   print(results_df)
 } else {
   cat("\n No valid results generated.\n")
-}
+} 
 
 
