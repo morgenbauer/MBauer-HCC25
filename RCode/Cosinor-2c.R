@@ -17,6 +17,8 @@ library(Ryacas)
 library(numDeriv)
 library(rootSolve)
 
+library(fs)
+
 #Add a function to hard code a specific source for AllTwin2Day? In order to toggle between both
 
 #ConvertToHccDegrees ensures results are consistent with HCC philosophy that
@@ -280,17 +282,9 @@ process_sheet_data <- function(file_path, sheet_name) {
   
   if (is.null(data) || nrow(data) < 10) return(NULL)
   
-  if (sheet_name == "HR051a") {
-    time_col <- 3
-    hr_col <- 4
-  } else if (sheet_name == "HR051b") {
-    time_col <- 3
-    hr_col <- 4
-  } else {
-    warning("Unknown sheet format")
-    return(NULL)
-  }
-  
+  time_col <- 3
+  hr_col <- 4
+
   simplified_data <- data.frame(
     Sheet_ID = sheet_name,
     time = as.numeric(data[[time_col]]),
@@ -305,24 +299,37 @@ process_sheet_data <- function(file_path, sheet_name) {
 
 # Directory Setup
 dir_to_script <- getwd()
-input_path <- file.path(dir_to_script, "..", "GC")
+# TODO : why is getwd() NOT returning the following path
+dir_to_script <- file.path("C:", "Users", "chase", "Documents", "HCC", "_git", "MBauer-HCC25", "RCode" )
+if (!dir.exists(dir_to_script)) stop("Directory not found: ", dir_to_script)
+
+input_path <- file.path(dir_to_script, "..", "01-input", "AllTwin2Day")
+if (!dir.exists(input_path)) stop("Directory not found: ", input_path)
+
 output_path <- file.path(dir_to_script, "..", "02-output")
 if (!dir.exists(output_path)) dir.create(output_path, recursive = TRUE)
 
-target_file <- "MB-Tw051-2c.xlsx"
-excel_file <- file.path(input_path, target_file)
-if (!file.exists(excel_file)) stop("File not found: ", excel_file)
+# Obtain a list of files in the input_path
+xlsxFileToProcess <- list.files(
+  path       = input_path, 
+  pattern    = "\\.xlsx?$", 
+  full.names = TRUE
+)
 
-sheets_to_process <- c("HR051a", "HR051b")
+sheetNameFromPath <- function(aPath){
+  fs::path_ext_remove(basename(aPath))
+}
+
 all_results <- list()
 
-for (sheet_name in sheets_to_process) {
-  result <- process_sheet_data(excel_file, sheet_name)
+# send each file to process_sheet_data
+for (xlsxFile in xlsxFileToProcess) {
+  result <- process_sheet_data(xlsxFile, sheetNameFromPath(xlsxFile))
   if (!is.null(result)) {
-    all_results[[sheet_name]] <- result
-    cat("✔ Processed:", sheet_name, "\n")
+    all_results[[xlsxFile]] <- result
+    cat("✔ Processed:", xlsxFile, "\n")
   } else {
-    cat("✖ Failed:", sheet_name, "\n")
+    cat("✖ Failed:", xlsxFile, "\n")
   }
 }
 
