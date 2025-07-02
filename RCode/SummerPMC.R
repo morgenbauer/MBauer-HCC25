@@ -12,6 +12,7 @@ output_path <- file.path(dir_to_script, "..", "02-output")
 if (!dir.exists(output_path)) dir.create(output_path, recursive = TRUE)
 
 # Obtain a list of files in the input_path
+#TODO: be sure not to read in ~cosall 
 xlsxFileToProcess <- list.files(
   path       = input_path, 
   pattern    = "cosall.xlsx", 
@@ -26,7 +27,8 @@ all_results <- list()
 
 # Process a sheet
 process_sheet_data <- function(file_path, sheet_name) {
-  cat("\nProcessing sheet:", sheet_name, "\n")
+  cat("Processing sheet:", sheet_name)
+  cat("Processing path:", file_path)
   data <- tryCatch({
     read_excel(file_path, sheet = sheet_name)
   }, error = function(e) {
