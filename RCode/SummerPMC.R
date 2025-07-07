@@ -49,6 +49,7 @@ pmc_general <- function(data, PR_col, M_col, A_col, phi_col, phi_unit = "deg") {
   mean_A <- sqrt(mean_beta^2 + mean_gamma^2)
   mean_phi_rad <- atan2(mean_gamma, mean_beta)
   mean_phi_deg <- mean_phi_rad * 180 / pi
+  
   list(
     mean_PR = mean_PR,
     mean_M = mean_M,
@@ -58,8 +59,10 @@ pmc_general <- function(data, PR_col, M_col, A_col, phi_col, phi_unit = "deg") {
 }
 
 # Define analyses: list of lists with column names and a label
+# Changed column names in excel sheet PR(Tau1) changed to PRTau1. Otherwise RStudio, interpretes it as a function
+# Fix me: Chase wonders what is pmc_analysis, is it about column names from spreadsheet or something else?
 pmc_analyses <- list(
-  PMC_24h = list(PR = "PR", MESOR = "MESOR", A = "A1", Phi = "Phi1", label = "24h"),
+  PMC_24h = list(PR = "PRTau1", MESOR = "MESOR", A = "A1", Phi = "Phi1", label = "24h"),
   PMC_12h = list(PR = "PRTau2", MESOR = "MESOR", A = "A2", Phi = "Phi2", label = "12h"),
   PMC_ortho = list(PR = "PR", MESOR = "MESOR", A = "Aoverall", Phi = "ϕOrthophase", label = "Composite-Orthophase"),
   PMC_bathy = list(PR = "PR", MESOR = "MESOR", A = "Aoverall", Phi = "ϕBathyphase", label = "Composite-Bathyphase")
@@ -108,9 +111,26 @@ if ("BWgrp" %in% names(input_data)) {
   }
 }
 
-# Save results
-saveRDS(list(population = results_population, by_bw = results_by_bw),
-        file = file.path(output_path, "all_population_and_bw_pmc_results.rds"))
+# --- Save population results as CSV ---
+# Convert results_population (a list) to a data frame
+population_df <- do.call(rbind, lapply(names(results_population), function(name) {
+  cbind(analysis = name, as.data.frame(results_population[[name]]))
+}))
+write.csv(population_df, file = file.path(output_path, "population_pmc_results.csv"), row.names = FALSE)
+
+# --- Save BW group results as CSV ---
+# For each BW group, create a CSV
+if (length(results_by_bw) > 0) {
+  for (bw in names(results_by_bw)) {
+    bw_df <- do.call(rbind, lapply(names(results_by_bw[[bw]]), function(name) {
+      cbind(analysis = name, as.data.frame(results_by_bw[[bw]][[name]]))
+    }))
+    write.csv(bw_df,
+              file = file.path(output_path, paste0("BWgroup_", bw, "_pmc_results.csv")),
+              row.names = FALSE)
+  }
+}
+
 
 
 
