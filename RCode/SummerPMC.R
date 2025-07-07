@@ -49,6 +49,8 @@ pmc_general <- function(data, PR_col, M_col, A_col, phi_col, phi_unit = "deg") {
   mean_A <- sqrt(mean_beta^2 + mean_gamma^2)
   mean_phi_rad <- atan2(mean_gamma, mean_beta)
   mean_phi_deg <- mean_phi_rad * 180 / pi
+  # Ensure acrophases are always reported as negative values
+  if (mean_phi_deg > 0) { mean_phi_deg <- mean_phi_deg - 360}
   
   list(
     mean_PR = mean_PR,
