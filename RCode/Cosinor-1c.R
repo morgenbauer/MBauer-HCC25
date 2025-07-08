@@ -1,6 +1,7 @@
 library(dplyr)
 library(ggplot2)
 library(readxl)  # For reading Excel files
+library(this.path) # For determining the directory where the script is running
 
 # Function to compute cosinor parameters with the correct acrophase calculation
 compute_cosinor <- function(local_data) {
@@ -203,7 +204,7 @@ process_twin_data <- function(file_path) {
 # Main script execution
 
 # Set the directory path where this script is running
-dir_to_RStudio_script <- getwd()
+dir_to_RStudio_script <- dirname(this.path::this.path())
 # The RStudio folder is at same level as "01-input".  Hence the following ".."
 input_path <- file.path(dir_to_RStudio_script, "..", "01-input", "AllTwinData")
 # This is where output files will go

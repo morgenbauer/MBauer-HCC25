@@ -16,7 +16,7 @@ library(Deriv)
 library(Ryacas)
 library(numDeriv)
 library(rootSolve)
-
+library(this.path) # For determining the directory where the script is running
 library(fs)
 
 #Add a function to hard code a specific source for AllTwin2Day? In order to toggle between both
@@ -298,9 +298,7 @@ process_sheet_data <- function(file_path, sheet_name) {
 }
 
 # Directory Setup
-dir_to_script <- getwd()
-# TODO : why is getwd() NOT returning the following path
-# dir_to_script <- file.path("C:", "Users", "chase", "Documents", "HCC", "_git", "MBauer-HCC25", "RCode" )
+dir_to_script <- dirname(this.path::this.path())
 if (!dir.exists(dir_to_script)) stop("Directory not found: ", dir_to_script)
 
 input_path <- file.path(dir_to_script, "..", "01-input", "AllTwin2Day")

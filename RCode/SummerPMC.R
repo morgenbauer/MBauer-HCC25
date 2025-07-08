@@ -1,6 +1,6 @@
 
 library(readxl)
-library(this.path)
+library(this.path) # For determining the directory where the script is running
 
 # Directory Setup
 dir_to_script <- dirname(this.path::this.path())
