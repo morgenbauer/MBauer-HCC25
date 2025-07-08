@@ -1,8 +1,9 @@
 
 library(readxl)
+library(this.path)
 
 # Directory Setup
-dir_to_script <- getwd()
+dir_to_script <- dirname(this.path::this.path())
 input_path <- file.path(dir_to_script, "..", "GC")
 if (!dir.exists(input_path)) stop("directory not found: ", input_path)
 output_path <- file.path(dir_to_script, "..", "02-output")
