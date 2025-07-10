@@ -81,8 +81,8 @@ pmc_general <- function(data, PR_col, M_col, A_col, phi_col, phi_unit = "deg") {
   #Now we have a the value of the f distribution
   # P Value for overall model, 2 df in numerator (elipse for A and phi)
   pval <- df(fval,2,n-2)
-  browser()
-  # Confidence intervals for amplitude and acrophase
+
+    # Confidence intervals for amplitude and acrophase
   den <- mean_A^2
   num1 <- (mean_beta^2 * c22) + (2 * mean_beta * mean_gamma * c23) + (mean_gamma^2 * c33)
   num2 <- (mean_gamma^2 * c22) - (2 * mean_beta * mean_gamma * c23) + (mean_beta^2 * c33)
@@ -112,6 +112,7 @@ pmc_general <- function(data, PR_col, M_col, A_col, phi_col, phi_unit = "deg") {
     mean_M = mean_M,
     mean_A = mean_A,
     mean_phi_deg = mean_phi_deg,
+    pval = pval,
     # Amplitude confidence intervals
     A_CI_lower = A_CI_lower,
     A_CI_upper = A_CI_upper,
@@ -168,6 +169,54 @@ for (analysis in names(pmc_analyses)) {
   print(res)
 }
 
+# Run for each BW group (col BWgrp)
+results_by_bw <- list()
+if ("BWgrp" %in% names(input_data)) {
+  bw_groups <- unique(input_data$BWgrp)
+  for (bw in bw_groups) {
+    cat(sprintf("\n==== BW Group: %s ====\n", bw))
+    group_data <- input_data[input_data$BWgrp == bw, ]
+    group_results <- list()
+    for (analysis in names(pmc_analyses)) {
+      cols <- pmc_analyses[[analysis]]
+      res <- pmc_general(
+        data = group_data,
+        PR_col = cols$PR,
+        M_col = cols$MESOR,
+        A_col = cols$A,
+        phi_col = cols$Phi,
+        phi_unit = "deg"
+      )
+      group_results[[analysis]] <- res
+      cat(sprintf("\nBW Group %s - PMC (%s):\n", bw, cols$label))
+      print(res)
+    }
+    results_by_bw[[as.character(bw)]] <- group_results
+  }
+}
+
+# --- Save ALL BW group results in ONE CSV ---
+if (length(results_by_bw) > 0) {
+  # Create a single consolidated data frame for all BW groups
+  all_bw_df <- do.call(rbind, lapply(names(results_by_bw), function(bw) {
+    # For each BW group, create rows for each analysis
+    bw_group_df <- do.call(rbind, lapply(names(results_by_bw[[bw]]), function(analysis) {
+      cbind(
+        BW_group = bw,
+        analysis = analysis,
+        as.data.frame(results_by_bw[[bw]][[analysis]])
+      )
+    }))
+    return(bw_group_df)
+  }))
+  
+  # Write the consolidated BW results to a single CSV
+  write.csv(all_bw_df, 
+            file = file.path(output_path, "all_BWgroups_pmc_results.csv"), 
+            row.names = FALSE)
+  
+  cat("All BW group results saved to: all_BWgroups_pmc_results.csv\n")
+}
 
 # --- Save population results as CSV ---
 # Convert results_population (a list) to a data frame
